@@ -1,0 +1,29 @@
+# Optional Postgres override — use with:
+#   docker compose -f docker-compose.yml -f docker-compose.postgres.yml up --build
+#
+# Requires psycopg (already included in backend/requirements.txt).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: stj
+      POSTGRES_PASSWORD: stj
+      POSTGRES_DB: stj_file_system
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stj -d stj_file_system"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    environment:
+      DATABASE_URL: postgresql+psycopg://stj:stj@postgres:5432/stj_file_system
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
